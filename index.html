@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> VQ-CTAP: Cross-Modal Fine-Grained Sequence Representation Learning for Speech Processing</title>
+  <!-- Include custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+  <!-- Include Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Add custom CSS for improved styling */
+    body {
+      font-family: 'Open Sans', sans-serif; /* Use Open Sans font */
+      margin: 0; /* Remove default margin */
+      padding: 0; /* Remove default padding */
+    }
+    header {
+      background-color: #000; /* Dark background color */
+      color: #fff; /* White text color */
+      padding: 20px; /* Add padding */
+      text-align: center; /* Center-align text */
+    }
+    .container {
+      max-width: 1200px; /* Increase max-width for better content presentation */
+      margin: 0 auto; /* Center-align container */
+      padding: 20px; /* Add padding */
+    }
+    .section {
+      margin-bottom: 40px; /* Add spacing between sections */
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 700; /* Increase font weight for headings */
+      margin-top: 0; /* Remove default margin for headings */
+    }
+    p {
+      line-height: 1.6; /* Increase line height for better readability */
+    }
+    /* Add styles for images */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    /* Add styles for tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd; /* Add border between table rows */
+    }
+    th {
+      background-color: #f2f2f2; /* Light background color for table header */
+    }
+    /* Add styles for audio controls */
+    audio {
+      width: 100%;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+    <header>
+        <h1>VQ-CTAP: Cross-Modal Fine-Grained Sequence Representation Learning for Speech Processing</h1>
+    </header>
+    <div class="authors">
+        <p><center>Chunyu Qiang, Wang Geng, Yi Zhao, Ruibo Fu, Tao Wang, Cheng Gong, Tianrui Wang, Qiuyu Liu, Jiangyan Yi, Zhengqi Wen, Chen Zhang, Longbiao Wang, Jianwu Dang, Jianhua Tao</center></p>
+    </div>
+    <div class="affiliations">
+        <center>Tianjin University, Tianjin, China</center>
+        <center>Kuaishou Technology Co., Ltd, Beijing, China</center>
+        <center>Institute of Automation, Chinese Academy of Sciences, Beijing, China</center>
+        <center>Tsinghua University, Beijing, China</center>
+    </div>
+  
+<p><br /></p>
+  <main>
+    <div class="container">
+      <section class="section">
+        <h2 class="title is-4">Abstract</h2>
+        <p>Deep learning has brought significant improvements to the field of cross-modal representation learning. For tasks such as text-to-speech (TTS), voice conversion (VC), and automatic speech recognition (ASR), a cross-modal fine-grained (frame-level) sequence representation is desired, emphasizing the semantic content of the text modality while de-emphasizing the paralinguistic information of the speech modality. We propose a method called "Vector Quantized Contrastive Token-Acoustic Pre-training (VQ-CTAP)", which uses the cross-modal aligned sequence transcoder to bring text and speech into a joint multimodal space, learning how to connect text and speech at the frame level. The proposed VQ-CTAP is a paradigm for cross-modal sequence representation learning, offering a promising solution for fine-grained generation and recognition tasks in speech processing. The VQ-CTAP can be directly applied to VC and ASR tasks without fine-tuning or additional structures. We propose a sequence-aware semantic connector, which connects multiple frozen pre-trained modules for the TTS task, exhibiting a plug-and-play capability. We design a stepping optimization strategy to ensure effective model convergence by gradually injecting and adjusting the influence of various loss components. Furthermore, we propose a semantic-transfer-wise paralinguistic consistency loss to enhance representational capabilities, allowing the model to better generalize to unseen data and capture the nuances of paralinguistic information. In addition, VQ-CTAP achieves high-compression speech coding at a rate of 25Hz from 24kHz input waveforms, which is a 960-fold reduction in the sampling rate.</p>
+      </section>
+
+      <!-- 实验数据和基准数据的额外说明 -->
+      <section class="section">
+        <h2 class="title is-4">Experiment</h2>
+        <p><strong>Experiment Details:</strong></p>
+        <p>This page shows the samples in the paper "<strong>VQ-CTAP: Cross-Modal Fine-Grained Sequence Representation Learning for Speech Processing</strong>".</p>
+        <p>For the labeled text-speech paired data, we integrate our internal dataset with the AISHELL-3 dataset and the LibriTTS dataset, resulting in a combined total of 900 hours of recordings from 3000 speakers.
+        For unlabeled speech-only data, we utilize 20,000 hours of speech crawled from the internet, primarily sourced from audiobooks, podcasts, and online videos.</p>
+        <p>All test samples and speakers have not appeared in the training set and validation set.</p>
+
+      </section>
+  
+      <!-- 模型架构图 -->
+      <section class="section">
+        <h2 class="title is-4">Model Architecture</h2>
+        <figure class="image">
+          <img src="model_v2.png" alt="Model Architecture">
+          <figcaption style="font-style: italic; margin-top: 8px;">
+            The core component of VQ-CTAP is the cross-modal aligned sequence transcoder, which jointly trains three encoders and two decoders. It extracts phoneme embedding <strong>(P)</strong> from the target text, target speech embedding <strong>(S)</strong> and prompt paralinguistic embedding <strong>(G)</strong> from the target speech, as well as random speech embedding <strong>(R)</strong> from the random speech. The <strong>(P)</strong> and <strong>(S)</strong> are used to construct token-acoustic contrastive loss, which learns frame-level (dis)similarity between a batch of speech-text pairs. Additionally, two decoders are adapted for downstream tasks such as TTS, ASR, and VC. To enable enhanced representation learning, unlabeled random speech is used to calculate semantic-transfer-wise paralinguistic consistency loss.
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- Tasks -->
+      <section class="section">
+        <h2 class="title is-4">Plug-and-Play for Downstream Tasks</h2>
+        <figure class="image">
+          <img src="application.jpg" alt="application">
+          <figcaption style="font-style: italic; margin-top: 8px;">
+            The pre-trained VQ-CTAP is used for downstream TTS, VC and ASR tasks.
+          </figcaption>
+        </figure>
+      </section>
+      <section class="section">
+        <p>To demonstrate the model's capabilities for downstream frame-level tasks, we evaluated its performance on TTS, VC, and ASR.
+        On this demo page, the methods that can be used for the TTS, VC and ASR tasks are shown: <strong>Wav2Vec2.0, Hubert, CTAP and VQ-CTAP (proposed)</strong>. 
+
+        Note that, to ensure fairness, the TTS, VC and ASR systems differ only in their intermediate semantic coding (the representations extracted by these models), while the remaining structures are identical and trained using the same dataset. The same duration prediction model is also used.
+      </section>
+      <!-- 不同任务下不同说话人不同方法对应的样音 -->
+      <section class="section">
+        <h2 class="title is-4">TTS Demos</h2>
+        <table align="center">
+          <thead>
+            <tr>
+              <th>Text</th>
+              <th>Prompt</th>
+              <th>Wav2Vec2.0</th>
+              <th>Hubert</th>
+              <th>CTAP</th>
+              <th>VQ-CTAP(proposed)</th>
+            </tr>
+          </thead>
+          <tbody>
+           <tr>
+              <td>你只需要像这样坐着，弯腰然后深呼吸。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/1.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/1.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/1.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/1.1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>这儿夏天雨水很多。可是秋天很少雨。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/1.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/1.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/1.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/1.2.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>罗林马泽尔。他表现得非常出色。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/1.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/1.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/1.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/1.3.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>是啊，而且司机中英文都不会说，</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/1.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/1.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/1.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/1.4.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>这次选择了静安香格里拉的premier king room。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/2.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/2.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/2.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/2.1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>古时也有青梅煮酒论英雄的典故。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/2.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/2.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/2.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/2.2.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>美国关节炎与风湿病杂志刊登研究称。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/2.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/2.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/2.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/2.3.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>二十二岁因在江湖恩仇录中出演娇娇一角而入行。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/2.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/2.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/2.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/2.4.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>认真谋划周密安排、分工负责、加快推进。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/3.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/3.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/3.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/3.1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>清明假期，全国铁路发送旅客五千四百万人次。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/3.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/3.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/3.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/3.2.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>分国家战略、聚焦精准、合力攻坚。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/3.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/3.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/1.3.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/3.3.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>用球杆打白球，白球打到彩球。你要把彩球打进洞里。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/4.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/4.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/4.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/4.1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>这次选择了静安香格里拉的premier king room。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/4.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/4.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/4.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/4.2.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>那是我精通的事，你要举办派对，绝对少不了我。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/4.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/4.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/4.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/4.3.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>田园蔬菜粥不错呀，爱护环境人人有责。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/4.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/4.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/4.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/4.4.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>我猜他抢的太凶，裁判判罚主队。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/4.5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/4.5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/4.5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/4.5.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>而这次图片的发布时间，同样是在周末晚上的二十二点三十分。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/5.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/5.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/5.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/5.1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>小白一边哭，一边用拳头砸额头。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/5.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/5.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/5.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/5.2.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>哦，你喜欢上谁了，你若安好，便是晴天。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/f_5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/wav2vec2/5.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/hubert/5.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/cpsp/5.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/female/vqctap/5.3.wav" /></audio></td>
+            </tr>
+
+
+           <tr>
+              <td>这儿夏天雨水很多。可是秋天很少雨。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/1.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/1.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/1.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/1.1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>我真不敢相信与客户共进午餐时，竟然忘了带钱包。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/1.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/1.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/1.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/1.2.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>别啊！至少再喝一杯，以表送行。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/1.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/1.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/1.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/1.3.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>我目前是一家外企的业务员。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/1.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/1.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/1.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/1.4.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>我打电话请病假了。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/1.5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/1.5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/1.5.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/1.5.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>张恒偶尔有所不懂的地方李建国也一一给予解答</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/2.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/2.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/2.1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/2.1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>距离翱翔紫禁场馆约一百米距离</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/2.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/2.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/2.2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/2.2.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>应龙也在前面开路用尾巴划地</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/2.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/2.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/2.3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/2.3.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td>鱼子酱是好几样side dishes可以自己搭配的。</td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/prompt/m_2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/wav2vec2/2.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/hubert/2.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/cpsp/2.4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/tts/male/vqctap/2.4.wav" /></audio></td>
+            </tr>
+
+        
+          </tbody>
+        </table>
+      </section>
+
+
+      <section class="section">
+        <h2 class="title is-4">VC Demos</h2>
+
+          <table align="center">
+            <thead>
+              <tr>
+                <th>Source Speech </th>
+              </tr>
+            </thead>
+            <tbody>
+             <tr>
+              <td><audio controls="" preload="auto"><source src="wav/vc/source/1.wav" /></audio></td>
+              </tr>
+              <tr>
+                <td>Text: 她把鞋子拎在手上光着脚丫故意踩在水洼里。</td>
+              </tr>
+            </tbody>
+          </table>
+
+        <table align="center">
+          <thead>
+            <tr>
+              <th>Prompt (Target Speaker)</th>
+              <th>Wav2Vec2.0</th>
+              <th>Hubert</th>
+              <th>CTAP</th>
+              <th>VQ-CTAP(proposed)</th>
+            </tr>
+          </thead>
+          <tbody>
+           <tr>
+              <td><audio controls="" preload="auto"><source src="wav/vc/prompt/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/1/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/hubert/1/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/1/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/1/1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td><audio controls="" preload="auto"><source src="wav/vc/prompt/2.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/2/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/hubert/2/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/2/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/2/1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td><audio controls="" preload="auto"><source src="wav/vc/prompt/3.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/3/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/hubert/3/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/3/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/3/1.wav" /></audio></td>
+            </tr>
+
+            <tr>
+              <td><audio controls="" preload="auto"><source src="wav/vc/prompt/4.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/4/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/hubert/4/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/4/1.wav" /></audio></td>
+              <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/4/1.wav" /></audio></td>
+            </tr>  
+          </tbody>
+        </table>
+
+
+        <table align="center">
+          <thead>
+            <tr>
+              <th>Source Speech </th>
+            </tr>
+          </thead>
+          <tbody>
+           <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/source/2.wav" /></audio></td>
+            </tr>
+            <tr>
+              <td>Text: 我身上分文没有</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <table align="center">
+        <thead>
+          <tr>
+            <th>Prompt (Target Speaker)</th>
+            <th>Wav2Vec2.0</th>
+            <th>Hubert</th>
+            <th>CTAP</th>
+            <th>VQ-CTAP(proposed)</th>
+          </tr>
+        </thead>
+        <tbody>
+         <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/1/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/1/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/1/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/1/2.wav" /></audio></td>
+          </tr>
+        
+          <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/2/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/2/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/2/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/2/2.wav" /></audio></td>
+          </tr>
+        
+          <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/3/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/3/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/3/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/3/2.wav" /></audio></td>
+          </tr>
+        
+          <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/4.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/4/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/4/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/4/2.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/4/2.wav" /></audio></td>
+          </tr>  
+        </tbody>
+        </table>
+
+        <table align="center">
+          <thead>
+            <tr>
+              <th>Source Speech </th>
+            </tr>
+          </thead>
+          <tbody>
+           <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/source/3.wav" /></audio></td>
+            </tr>
+            <tr>
+              <td>Text: 她把他那件整洁的上装的衣扣统统扣上</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <table align="center">
+        <thead>
+          <tr>
+            <th>Prompt (Target Speaker)</th>
+            <th>Wav2Vec2.0</th>
+            <th>Hubert</th>
+            <th>CTAP</th>
+            <th>VQ-CTAP(proposed)</th>
+          </tr>
+        </thead>
+        <tbody>
+         <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/1/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/1/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/1/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/1/3.wav" /></audio></td>
+          </tr>
+        
+          <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/2/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/2/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/2/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/2/3.wav" /></audio></td>
+          </tr>
+        
+          <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/3/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/3/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/3/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/3/3.wav" /></audio></td>
+          </tr>
+        
+          <tr>
+            <td><audio controls="" preload="auto"><source src="wav/vc/prompt/4.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/wav2vec2/4/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/hubert/4/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/cpsp/4/3.wav" /></audio></td>
+            <td><audio controls="" preload="auto"><source src="wav/vc/vqctap/4/3.wav" /></audio></td>
+          </tr>  
+        </tbody>
+        </table>
+      </section>
+
+
+      <!-- TSNE -->
+      <section class="section">
+        <h2 class="title is-4">t-SNE plot of phoneme/speech embedding for 20 speakers</h2>
+        <figure class="image">
+          <img src="tsne_phoneme_embedding.png" alt="tsne_phoneme_embedding">
+          <figcaption style="font-style: italic; margin-top: 8px;">
+            To showcase the paralinguistic independence of VQ-CTAP's semantic coding, we synthesize four texts using prompts from 20 speakers, ensuring consistency across different speakers. Speech representation <strong>S</strong> is extracted using VQ-CTAP's speech encoder, while phoneme representation <strong>P</strong> is extracted using the phoneme encoder. The alignment between these two representations at the frame level is expected, with <strong>S</strong> devoid of speaker information. Using t-SNE, we compress <strong>P</strong> and <strong>S</strong> for each frame into 2-dimensional vectors, visualized in Figure. Here, $\bigstar$ represents <strong>P</strong>, while other shapes represent <strong>S</strong> for different speakers, with colors indicating corresponding positions of <strong>P</strong> and <strong>S</strong>. Figures(a) and (c) reveal close Euclidean distances between <strong>S</strong> of different speakers and their corresponding <strong>P</strong>, demonstrating VQ-CTAP's ability to extract speech representation (semantic coding) while removing paralinguistic information and aligning it with the text modality. Notably, despite variations in position, the corresponding <strong>P</strong> and <strong>S</strong> for the red and orange phonemes "k" in Figure(c) remain untangled, underscoring VQ-CTAP's context-dependent representation, consistent with the token-acoustic contrastive loss motivation. The clustering effect in shorter sentences (b) and (d) of Figure is not as pronounced as in longer sentences (a) and (c), further confirming VQ-CTAP's context modeling characteristic.
+          </figcaption>
+        </figure>
+      </section>
+      <section class="section">
+        <h2 class="title is-4">t-SNE plot of prompt paralinguistic embedding for 20 speakers with 100 sentences each</h2>
+        <figure class="image">
+          <img src="tsne_prompt_embedding.png" alt="tsne_prompt_embedding">
+          <figcaption style="font-style: italic; margin-top: 8px;">
+            We randomly select 2000 utterances from 20 speakers and utilize VQ-CTAP's prompt encoder to extract prompt paralinguistic embeddings, compressing them into 2-dimensional vectors using t-SNE, as depicted in Figure. The scattered distribution in Figure(a) suggests that the prompt encoder struggles to model timbre without the stepping optimization strategy. Conversely, the prompt paralinguistic embeddings extracted by VQ-CTAP exhibit clear boundaries between different speakers, showcasing the prompt encoder's timbre modeling capability.
+          </figcaption>
+        </figure>
+      </section>
+      <section class="section">
+        <h2 class="title is-4">The Spectrograms, F0, and Energy of synthesized speech (the same semantic coding combining different prompts). The bottom row is the ground-truth.</h2>
+        <figure class="image">
+          <img src="spectrograms.png" alt="spectrograms">
+          <figcaption style="font-style: italic; margin-top: 8px;">
+            Figure shows the spectrograms, F0, and energy of the VC output speech generated by VQ-CTAP using the same semantic coding combined with different prompts. The synthesized speech exhibits strong alignment with the prompt speech in terms of spectrogram across multiple frequency domains, F0, and energy, benefiting from the characteristic of semantic-paralinguistic decoupling of the speech encoder in VQ-CTAP and the ability to extract paralinguistic information of the prompt encoder.
+          </figcaption>
+        </figure>
+      </section>
+    </div>
+  </main>
+  <footer>
+    <p>© 2024 VQ-CTAP. All rights reserved.</p>
+  </footer>
+</body>
+</html>
